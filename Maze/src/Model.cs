@@ -14,8 +14,9 @@ public class Model : Game
 
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
+    private Input.KeyboardInput _keyboardInput;
     private Maze _maze;
-    private Input.Controller _controller;
+    private Input.Controller _mazeController;
 
     public Model()
     {
@@ -27,15 +28,24 @@ public class Model : Game
         Content.RootDirectory = "Content";
         IsMouseVisible = false;
 
-        _maze = null;
-        _controller = new(this, _maze);
-
+        _keyboardInput = new();
     }
 
     protected override void Initialize()
     {
         // TODO: Add your initialization logic here
-        _controller.Initialize();
+
+        // Always Active Inputs
+
+        // New Game Inputs
+        _keyboardInput.RegisterCommand(Keys.F1, false, new Input.InputDeviceHelper.CommandDelegate(newGame5));
+        _keyboardInput.RegisterCommand(Keys.F2, false, new Input.InputDeviceHelper.CommandDelegate(newGame10));
+        _keyboardInput.RegisterCommand(Keys.F3, false, new Input.InputDeviceHelper.CommandDelegate(newGame15));
+        _keyboardInput.RegisterCommand(Keys.F4, false, new Input.InputDeviceHelper.CommandDelegate(newGame20));
+
+        // Alternate Display Pages
+        _keyboardInput.RegisterCommand(Keys.F5, false, new Input.InputDeviceHelper.CommandDelegate(displayHighScores));
+        _keyboardInput.RegisterCommand(Keys.F6, false, new Input.InputDeviceHelper.CommandDelegate(displayCredits));
 
         base.Initialize();
     }
@@ -53,8 +63,9 @@ public class Model : Game
             Exit();
 
         // TODO: Add your update logic here
-        _maze.Update(gameTime);
-        _controller.Update(gameTime);
+        if (_maze != null) _maze.Update(gameTime);
+
+        _keyboardInput.Update(gameTime);
 
         base.Update(gameTime);
     }
@@ -66,13 +77,51 @@ public class Model : Game
         // TODO: Add your drawing code
         _spriteBatch.Begin();
 
-        if (_maze != null)
-        {
-            _maze.Draw(_spriteBatch);
-        }
+        if (_maze != null) _maze.Draw(_spriteBatch);
 
         _spriteBatch.End();
 
         base.Draw(gameTime);
+    }
+
+    private void newGame(int size)
+    {
+        _maze = new Maze(
+            this,
+            new Vector2(WIDTH / 4, 90),
+            MAZE_DIM,
+            size
+        );
+        _maze.Initialize();
+        _mazeController = new(_keyboardInput, _maze);
+
+    }
+    private void newGame5()
+    {
+        newGame(5);
+    }
+    private void newGame10()
+    {
+        newGame(10);
+    }
+    private void newGame15()
+    {
+        newGame(15);
+    }
+    private void newGame20()
+    {
+        newGame(20);
+    }
+    private void displayHighScores()
+    {
+        _maze = null;
+        _mazeController = null;
+        Console.WriteLine("[TODO]: Display High Scores");
+    }
+    private void displayCredits()
+    {
+        _maze = null;
+        _mazeController = null;
+        Console.WriteLine("[TODO]: Display Credits");
     }
 }

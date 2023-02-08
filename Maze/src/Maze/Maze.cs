@@ -4,10 +4,12 @@ using System.Collections.Generic;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using Maze.Input;
 
 namespace Maze
 {
-    public class Maze : Component
+    public class Maze : Component, IControls
     {
         private Texture2D _texture;
         private List<Cell> Path;
@@ -62,6 +64,27 @@ namespace Maze
             }
 
             Player.Initialize();
+        }
+
+        public void RegisterControls(KeyboardInput keyboardInput)
+        {
+            keyboardInput.RegisterCommand(Keys.T, false, new Input.InputDeviceHelper.CommandDelegate(ToggleTrail));
+            keyboardInput.RegisterCommand(Keys.P, false, new Input.InputDeviceHelper.CommandDelegate(TogglePath));
+            keyboardInput.RegisterCommand(Keys.H, false, new Input.InputDeviceHelper.CommandDelegate(ToggleHint));
+            keyboardInput.RegisterCommand(Keys.Right, true, new Input.InputDeviceHelper.CommandDelegate(MoveRight));
+            keyboardInput.RegisterCommand(Keys.Left, true, new Input.InputDeviceHelper.CommandDelegate(MoveLeft));
+            keyboardInput.RegisterCommand(Keys.Up, true, new Input.InputDeviceHelper.CommandDelegate(MoveUp));
+            keyboardInput.RegisterCommand(Keys.Down, true, new Input.InputDeviceHelper.CommandDelegate(MoveDown));
+        }
+
+        public void UnregisterControls(KeyboardInput keyboardInput) {
+            keyboardInput.UnregisterCommand(Keys.T);
+            keyboardInput.UnregisterCommand(Keys.P);
+            keyboardInput.UnregisterCommand(Keys.H);
+            keyboardInput.UnregisterCommand(Keys.Right);
+            keyboardInput.UnregisterCommand(Keys.Left);
+            keyboardInput.UnregisterCommand(Keys.Up);
+            keyboardInput.UnregisterCommand(Keys.Down);
         }
 
         public override void Update(GameTime gameTime)
@@ -336,28 +359,28 @@ namespace Maze
         }
 
         /// ----- Controls -----
-        public void MoveRight(GameTime gametime)
+        public void MoveRight()
         {
             if (Player.X < Size - 1 && !Grid[Player.X, Player.Y].walls[Cell.E])
             {
                 Player.MoveRight(CellWidth);
             }
         }
-        public void MoveLeft(GameTime gametime)
+        public void MoveLeft()
         {
             if (Player.X > 0 && !Grid[Player.X, Player.Y].walls[Cell.W])
             {
                 Player.MoveLeft(CellWidth);
             }
         }
-        public void MoveUp(GameTime gametime)
+        public void MoveUp()
         {
             if (Player.Y > 0 && !Grid[Player.X, Player.Y].walls[Cell.N])
             {
                 Player.MoveUp(CellWidth);
             }
         }
-        public void MoveDown(GameTime gametime)
+        public void MoveDown()
         {
             if (Player.Y < Size - 1 && !Grid[Player.X, Player.Y].walls[Cell.S])
             {

@@ -1,3 +1,4 @@
+using Maze.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -34,25 +35,25 @@ namespace Maze
             throw new System.NotImplementedException();
         }
 
-        public void MoveRight(int width)
+        public void MoveRight(int moveDist)
         {
             X++;
-            Position.X += width;
+            Position.X += moveDist;
         }
-        public void MoveLeft(int width)
+        public void MoveLeft(int moveDist)
         {
             X--;
-            Position.X -= width;
+            Position.X -= moveDist;
         }
-        public void MoveUp(int width)
+        public void MoveUp(int moveDist)
         {
             Y--;
-            Position.Y -= width;
+            Position.Y -= moveDist;
         }
-        public void MoveDown(int width)
+        public void MoveDown(int moveDist)
         {
             Y++;
-            Position.Y += width;
+            Position.Y += moveDist;
         }
     }
 }
