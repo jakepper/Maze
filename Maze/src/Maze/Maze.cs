@@ -22,6 +22,7 @@ namespace Maze
         public int Size;
         private Cell[,] Grid;
         public Player Player;
+        public bool WinConditionMet;
 
         public Maze(Game game, Vector2 position, int width, int size) : base(game, position)
         {
@@ -89,9 +90,20 @@ namespace Maze
 
         public override void Update(GameTime gameTime)
         {
-            if (!Grid[Player.X, Player.Y].WalkedOn)
+            if (!Grid[Player.GridPosition.X, Player.GridPosition.Y].WalkedOn)
             {
-                Grid[Player.X, Player.Y].WalkedOn = true;
+                Grid[Player.GridPosition.X, Player.GridPosition.Y].WalkedOn = true;
+            }
+
+
+            if (Player.Moved) {
+                FindPath();
+                Player.Moved = false;
+            }
+
+            // Win Condition
+            if (Player.GridPosition == (Size - 1, Size - 1)) {
+                WinConditionMet = true;
             }
         }
 
@@ -128,7 +140,7 @@ namespace Maze
                 }
             }
 
-            if (showHint)
+            if (showHint && Path.Count > 1)
             {
                 var cell = Path[1];
                 int x = (int)cell.Position.X - 2 + cell.Width / 2;
@@ -178,12 +190,12 @@ namespace Maze
         public void TogglePath()
         {
             showPath = !showPath;
-            if (showPath) FindPath();
+            // if (showPath) FindPath();
         }
         public void ToggleHint()
         {
             showHint = !showHint;
-            if (showHint) FindPath();
+            // if (showHint) FindPath();
         }
         public void ToggleTrail()
         {
@@ -288,7 +300,7 @@ namespace Maze
                 }
             }
 
-            var start = Grid[Player.X, Player.Y];
+            var start = Grid[Player.GridPosition.X, Player.GridPosition.Y];
             var end = Grid[Size - 1, Size - 1];
 
             var closed = new List<Cell>();
@@ -361,28 +373,28 @@ namespace Maze
         /// ----- Controls -----
         public void MoveRight()
         {
-            if (Player.X < Size - 1 && !Grid[Player.X, Player.Y].walls[Cell.E])
+            if (Player.GridPosition.X < Size - 1 && !Grid[Player.GridPosition.X, Player.GridPosition.Y].walls[Cell.E])
             {
                 Player.MoveRight(CellWidth);
             }
         }
         public void MoveLeft()
         {
-            if (Player.X > 0 && !Grid[Player.X, Player.Y].walls[Cell.W])
+            if (Player.GridPosition.X > 0 && !Grid[Player.GridPosition.X, Player.GridPosition.Y].walls[Cell.W])
             {
                 Player.MoveLeft(CellWidth);
             }
         }
         public void MoveUp()
         {
-            if (Player.Y > 0 && !Grid[Player.X, Player.Y].walls[Cell.N])
+            if (Player.GridPosition.Y > 0 && !Grid[Player.GridPosition.X, Player.GridPosition.Y].walls[Cell.N])
             {
                 Player.MoveUp(CellWidth);
             }
         }
         public void MoveDown()
         {
-            if (Player.Y < Size - 1 && !Grid[Player.X, Player.Y].walls[Cell.S])
+            if (Player.GridPosition.Y < Size - 1 && !Grid[Player.GridPosition.X, Player.GridPosition.Y].walls[Cell.S])
             {
                 Player.MoveDown(CellWidth);
             }

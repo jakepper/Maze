@@ -14,6 +14,8 @@ public class Model : Game
 
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
+    private SpriteFont _scoreFont;
+    private SpriteFont _mazeFont;
     private Input.KeyboardInput _keyboardInput;
     private Maze _maze;
     private Input.Controller _mazeController;
@@ -55,6 +57,9 @@ public class Model : Game
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
         // TODO: use this.Content to load your game content here
+
+        _scoreFont = Content.Load<SpriteFont>(@"fonts\Score");
+        _mazeFont = Content.Load<SpriteFont>(@"fonts\Maze");
     }
 
     protected override void Update(GameTime gameTime)
@@ -63,7 +68,10 @@ public class Model : Game
             Exit();
 
         // TODO: Add your update logic here
-        if (_maze != null) _maze.Update(gameTime);
+        if (_maze != null) {
+            _maze.Update(gameTime);
+            if (_maze.WinConditionMet) displayCredits();
+        }
 
         _keyboardInput.Update(gameTime);
 
@@ -77,7 +85,15 @@ public class Model : Game
         // TODO: Add your drawing code
         _spriteBatch.Begin();
 
-        if (_maze != null) _maze.Draw(_spriteBatch);
+        _spriteBatch.DrawString(_mazeFont, "MAZE", new Vector2(90, 90), Color.Black);
+
+        if (_maze != null) {
+            _maze.Draw(_spriteBatch);
+            _spriteBatch.DrawString(_scoreFont, "Score: 000", new Vector2(90, 180), Color.Black);
+        }
+        // else {
+        //     _spriteBatch.DrawString(_scoreFont, "YOU WON", new Vector2(WIDTH / 4, 90), Color.Black);
+        // }
 
         _spriteBatch.End();
 

@@ -1,4 +1,3 @@
-using Maze.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -8,8 +7,8 @@ namespace Maze
     {
         private Texture2D _texture;
         private int Width;
-        public int X;
-        public int Y;
+        public (int X, int Y) GridPosition;
+        public bool Moved;
         public Player(Game game, Vector2 position, int width) : base(game, position)
         {
             _texture = new Texture2D(game.GraphicsDevice, 1, 1);
@@ -26,8 +25,7 @@ namespace Maze
 
         public override void Initialize()
         {
-            X = 0;
-            Y = 0;
+            GridPosition = (0, 0);
         }
 
         public override void Update(GameTime gameTime)
@@ -37,22 +35,26 @@ namespace Maze
 
         public void MoveRight(int moveDist)
         {
-            X++;
+            Moved = true;
+            GridPosition.X++;
             Position.X += moveDist;
         }
         public void MoveLeft(int moveDist)
         {
-            X--;
+            Moved = true;
+            GridPosition.X--;
             Position.X -= moveDist;
         }
         public void MoveUp(int moveDist)
         {
-            Y--;
+            Moved = true;
+            GridPosition.Y--;
             Position.Y -= moveDist;
         }
         public void MoveDown(int moveDist)
         {
-            Y++;
+            Moved = true;
+            GridPosition.Y++;
             Position.Y += moveDist;
         }
     }
