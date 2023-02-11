@@ -64,6 +64,8 @@ namespace Maze
                 }
             }
 
+            FindPath();
+
             Player.Initialize();
         }
 
