@@ -12,6 +12,7 @@ public class Model : Game
     {
         NONE,
         MAZE,
+        MAZE_WON,
         HIGH_SCORES,
         CREDITS
     }
@@ -26,7 +27,7 @@ public class Model : Game
     private SpriteFont _headerFont;
     private SpriteFont _textFont;
     private Input.KeyboardInput _keyboardInput;
-    private Screen display;
+    private Screen _display;
     private Maze _maze;
     private Input.Controller _mazeController;
 
@@ -40,7 +41,7 @@ public class Model : Game
         IsMouseVisible = true;
 
         _keyboardInput = new();
-        display = Screen.NONE;
+        _display = Screen.NONE;
     }
 
     protected override void Initialize() {
@@ -77,19 +78,24 @@ public class Model : Game
             Exit();
 
         // TODO: Add your update logic here
+        
+        ProcessInput(gameTime);
+
         if (_maze != null)
         {
             _maze.Update(gameTime);
             if (_maze.WinConditionMet) {
-                display = Screen.CREDITS;
+                _display = Screen.MAZE_WON;
                 _maze = null;
                 _mazeController = null;
             }
         }
 
-        _keyboardInput.Update(gameTime);
-
         base.Update(gameTime);
+    }
+
+    protected void ProcessInput(GameTime gameTime) {
+        _keyboardInput.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime) {
@@ -102,10 +108,15 @@ public class Model : Game
         _spriteBatch.DrawString(_mazeFont, "MAZE", new Vector2(90, 90), Color.Black);
 
         // Render Appropriate Screen
-        switch (display) {
+        switch (_display) {
             case Screen.MAZE: {
                 _maze.Draw(_spriteBatch);
-                _spriteBatch.DrawString(_scoreFont, "SCORE: 000", new Vector2(90, 270), Color.Black);
+                _spriteBatch.DrawString(_scoreFont, $"SCORE: {_maze.score}", new Vector2(90, 270), Color.Black);
+                _spriteBatch.DrawString(_scoreFont, $"TIME: {_maze.seconds:0000}", new Vector2(90, 360), Color.Black);
+                break;
+            }
+            case Screen.MAZE_WON: {
+                _spriteBatch.DrawString(_headerFont, "YOU WON", new Vector2(90, 180), Color.Black);
                 break;
             }
             case Screen.HIGH_SCORES: {
@@ -113,7 +124,7 @@ public class Model : Game
                 break;
             }
             case Screen.CREDITS: {
-                _spriteBatch.DrawString(_headerFont, "YOU WON", new Vector2(90, 180), Color.Black);
+                _spriteBatch.DrawString(_headerFont, "CREDITS", new Vector2(90, 180), Color.Black);
                 break;
             }
         }
@@ -143,7 +154,7 @@ public class Model : Game
         );
         _maze.Initialize();
         _mazeController = new(_keyboardInput, _maze);
-        display = Screen.MAZE;
+        _display = Screen.MAZE;
     }
     private void newGame5() {
         newGame(5);
@@ -158,9 +169,9 @@ public class Model : Game
         newGame(20);
     }
     private void displayHighScores() {
-        display = Screen.HIGH_SCORES;
+        _display = Screen.HIGH_SCORES;
     }
     private void displayCredits() {
-        display = Screen.CREDITS;
+        _display = Screen.CREDITS;
     }
 }

@@ -16,7 +16,9 @@ namespace Maze
         private bool showPath;
         private bool showHint;
         private bool showTrail;
-
+        public int score;
+        public float seconds;
+ 
         public int Width;
         public int CellWidth;
         public int Size;
@@ -67,11 +69,14 @@ namespace Maze
             FindPath();
 
             Player.Initialize();
+
+            seconds = 0f;
+            score = 0;
         }
 
         public void RegisterControls(KeyboardInput keyboardInput)
         {
-            keyboardInput.RegisterCommand(Keys.T, false, new Input.InputDeviceHelper.CommandDelegate(ToggleTrail));
+            keyboardInput.RegisterCommand(Keys.B, false, new Input.InputDeviceHelper.CommandDelegate(ToggleTrail));
             keyboardInput.RegisterCommand(Keys.P, false, new Input.InputDeviceHelper.CommandDelegate(TogglePath));
             keyboardInput.RegisterCommand(Keys.H, false, new Input.InputDeviceHelper.CommandDelegate(ToggleHint));
             keyboardInput.RegisterCommand(Keys.Right, true, new Input.InputDeviceHelper.CommandDelegate(MoveRight));
@@ -81,7 +86,7 @@ namespace Maze
         }
 
         public void UnregisterControls(KeyboardInput keyboardInput) {
-            keyboardInput.UnregisterCommand(Keys.T);
+            keyboardInput.UnregisterCommand(Keys.B);
             keyboardInput.UnregisterCommand(Keys.P);
             keyboardInput.UnregisterCommand(Keys.H);
             keyboardInput.UnregisterCommand(Keys.Right);
@@ -92,15 +97,26 @@ namespace Maze
 
         public override void Update(GameTime gameTime)
         {
+            seconds += (float) gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (Player.Moved) {
+                Player.Moved = false;
+
+                var playerCell = Grid[Player.GridPosition.X, Player.GridPosition.Y];
+                if (!playerCell.WalkedOn) {
+                    if (Path.Contains(playerCell)) {
+                        score += 5;
+                    }
+                    else {
+                        if (score > 0) score--;
+                    }
+                }
+                FindPath();
+            }
+
             if (!Grid[Player.GridPosition.X, Player.GridPosition.Y].WalkedOn)
             {
                 Grid[Player.GridPosition.X, Player.GridPosition.Y].WalkedOn = true;
-            }
-
-
-            if (Player.Moved) {
-                FindPath();
-                Player.Moved = false;
             }
 
             // Win Condition
@@ -118,6 +134,32 @@ namespace Maze
                 for (int j = 0; j < Size; j++)
                 {
                     Grid[i, j].Draw(spriteBatch);
+                }
+            }
+
+            if (showTrail)
+            {
+                for (int i = 0; i < Size; i++)
+                {
+                    for (int j = 0; j < Size; j++)
+                    {
+                        if (Grid[i, j].WalkedOn)
+                        {
+                            int x = (int)Grid[i, j].Position.X - 2 + Grid[i, j].Width / 2;
+                            int y = (int)Grid[i, j].Position.Y - 2 + Grid[i, j].Width / 2;
+                            int size = (int)(Width / Size) / 4;
+                            spriteBatch.Draw(
+                                _texture,
+                                new Rectangle(x, y, size, size),
+                                null,
+                                Color.DimGray,
+                                MathHelper.PiOver4,
+                                Vector2.Zero,
+                                SpriteEffects.None,
+                                0.0f
+                            );
+                        }
+                    }
                 }
             }
 
@@ -158,32 +200,6 @@ namespace Maze
                     SpriteEffects.None,
                     0.0f
                 );
-            }
-
-            if (showTrail)
-            {
-                for (int i = 0; i < Size; i++)
-                {
-                    for (int j = 0; j < Size; j++)
-                    {
-                        if (Grid[i, j].WalkedOn)
-                        {
-                            int x = (int)Grid[i, j].Position.X - 2 + Grid[i, j].Width / 2;
-                            int y = (int)Grid[i, j].Position.Y - 2 + Grid[i, j].Width / 2;
-                            int size = (int)(Width / Size) / 4;
-                            spriteBatch.Draw(
-                                _texture,
-                                new Rectangle(x, y, size, size),
-                                null,
-                                Color.DimGray,
-                                MathHelper.PiOver4,
-                                Vector2.Zero,
-                                SpriteEffects.None,
-                                0.0f
-                            );
-                        }
-                    }
-                }
             }
 
             Player.Draw(spriteBatch);
