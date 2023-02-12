@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System.Collections.Generic;
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -26,9 +26,11 @@ public class Model : Game
     private SpriteFont _scoreFont;
     private SpriteFont _headerFont;
     private SpriteFont _textFont;
+    private Texture2D _mazeTexture;
     private Input.KeyboardInput _keyboardInput;
     private Screen _display;
     private Maze _maze;
+    private Dictionary<int, int[]> _scores; // top 5 scores for each maze size
     private Input.Controller _mazeController;
 
     public Model() {
@@ -42,12 +44,12 @@ public class Model : Game
 
         _keyboardInput = new();
         _display = Screen.NONE;
+
+        _scores = new();
     }
 
     protected override void Initialize() {
         // TODO: Add your initialization logic here
-
-        // Always Active Inputs
 
         // New Game Inputs
         _keyboardInput.RegisterCommand(Keys.F1, false, new Input.InputDeviceHelper.CommandDelegate(newGame5));
@@ -58,6 +60,11 @@ public class Model : Game
         // Alternate Display Pages
         _keyboardInput.RegisterCommand(Keys.F5, false, new Input.InputDeviceHelper.CommandDelegate(displayHighScores));
         _keyboardInput.RegisterCommand(Keys.F6, false, new Input.InputDeviceHelper.CommandDelegate(displayCredits));
+
+        _scores.Add(5, new int[5]);
+        _scores.Add(10, new int[5]);
+        _scores.Add(15, new int[5]);
+        _scores.Add(20, new int[5]);
 
         base.Initialize();
     }
@@ -71,6 +78,8 @@ public class Model : Game
         _mazeFont = Content.Load<SpriteFont>(@"fonts\Maze");
         _headerFont = Content.Load<SpriteFont>(@"fonts\Header");
         _textFont = Content.Load<SpriteFont>(@"fonts\Text");
+
+        _mazeTexture = Content.Load<Texture2D>(@"textures\waterfall");
     }
 
     protected override void Update(GameTime gameTime) {
@@ -84,10 +93,27 @@ public class Model : Game
         if (_maze != null)
         {
             _maze.Update(gameTime);
-            if (_maze.WinConditionMet) {
-                _display = Screen.MAZE_WON;
+            if (_maze.WinConditionMet)
+            {
+                int index = -1;
+                for (int i = 0; i < 5; i++)
+                {
+                    if (_maze.Score > _scores[_maze.Size][i])
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+                if (index != -1) { 
+                    for (int i = 4; i > index; i--)
+                    {
+                        _scores[_maze.Size][i] = _scores[_maze.Size][i - 1];
+                    }
+                    _scores[_maze.Size][index] = _maze.Score;
+                }
                 _maze = null;
                 _mazeController = null;
+                _display = Screen.MAZE_WON;
             }
         }
 
@@ -105,40 +131,86 @@ public class Model : Game
         _spriteBatch.Begin();
 
         // Game Title
-        _spriteBatch.DrawString(_mazeFont, "MAZE", new Vector2(90, 90), Color.Black);
+        string text = "M";
+        Vector2 textMiddlePoint = _mazeFont.MeasureString(text) / 2;
+        Vector2 position = new Vector2(430 / 2 + 40, 180);
+        _spriteBatch.DrawString(_mazeFont, text, position, Color.White, 0, textMiddlePoint, 1.0f, SpriteEffects.None, 0.5f);
+        text = "A";
+        position.Y += 180;
+        _spriteBatch.DrawString(_mazeFont, text, position, Color.White, 0, textMiddlePoint, 1.0f, SpriteEffects.None, 0.5f);
+        text = "Z";
+        position.Y += 180;
+        _spriteBatch.DrawString(_mazeFont, text, position, Color.White, 0, textMiddlePoint, 1.0f, SpriteEffects.None, 0.5f);
+        text = "E";
+        position.Y += 180;
+        _spriteBatch.DrawString(_mazeFont, text, position, Color.White, 0, textMiddlePoint, 1.0f, SpriteEffects.None, 0.5f);
 
         // Render Appropriate Screen
         switch (_display) {
             case Screen.MAZE: {
                 _maze.Draw(_spriteBatch);
-                _spriteBatch.DrawString(_scoreFont, $"SCORE: {_maze.score}", new Vector2(90, 270), Color.Black);
-                _spriteBatch.DrawString(_scoreFont, $"TIME: {_maze.seconds:0000}", new Vector2(90, 360), Color.Black);
+                text = $"SCORE: {_maze.Score}";
+                textMiddlePoint = _scoreFont.MeasureString(text) / 2;
+                position.Y += 90;
+                _spriteBatch.DrawString(_scoreFont, text, position, Color.White, 0, textMiddlePoint, 1.0f, SpriteEffects.None, 0.5f);
+                text = $"TIME: {_maze.Seconds:0000}";
+                textMiddlePoint = _scoreFont.MeasureString(text) / 2;
+                position.Y += 90;
+                _spriteBatch.DrawString(_scoreFont, text, position, Color.White, 0, textMiddlePoint, 1.0f, SpriteEffects.None, 0.5f);
                 break;
             }
             case Screen.MAZE_WON: {
-                _spriteBatch.DrawString(_headerFont, "YOU WON", new Vector2(90, 180), Color.Black);
+                    text = "YOU WON!";
+                    textMiddlePoint = _mazeFont.MeasureString(text) / 2;
+                    position = new Vector2(WIDTH / 2, HEIGHT / 2);
+                    _spriteBatch.DrawString(_mazeFont, text, position, Color.White, 0, textMiddlePoint, 1.0f, SpriteEffects.None, 0.5f);
                 break;
             }
             case Screen.HIGH_SCORES: {
-                _spriteBatch.DrawString(_headerFont, "HIGH SCORES", new Vector2(90, 180), Color.Black);
+                text = "HIGH SCORES";
+                textMiddlePoint = _headerFont.MeasureString(text) / 2;
+                position = new Vector2(WIDTH / 2, 180);
+                _spriteBatch.DrawString(_headerFont, text, position, Color.White, 0, textMiddlePoint, 1.0f, SpriteEffects.None, 0.5f);
+                text = $"{"5x5",9}{"10x10",9}{"15x15",9}{"20x20",9}";
+                textMiddlePoint = _scoreFont.MeasureString(text) / 2;
+                position.Y += 180;
+                _spriteBatch.DrawString(_scoreFont, text, position, Color.White, 0, textMiddlePoint, 1.0f, SpriteEffects.None, 0.0f);
+                for (int i = 0; i < 5; i++)
+                {
+                    text = $"{_scores[5][i],9:000}{_scores[10][i],9:000}{_scores[15][i],9:000}{_scores[20][i],9:000}";
+                    position.Y += 90;
+                    _spriteBatch.DrawString(_scoreFont, text, position, Color.White, 0, textMiddlePoint, 1.0f, SpriteEffects.None, 0.0f);
+                }
                 break;
             }
             case Screen.CREDITS: {
-                _spriteBatch.DrawString(_headerFont, "CREDITS", new Vector2(90, 180), Color.Black);
+                text = "Credits";
+                textMiddlePoint = _headerFont.MeasureString(text) / 2;
+                position = new Vector2(WIDTH / 2, 180);
+                _spriteBatch.DrawString(_headerFont, text, position, Color.White, 0, textMiddlePoint, 1.0f, SpriteEffects.None, 0.5f);
+                text = "Developed By : Jake Epperson";
+                textMiddlePoint = _textFont.MeasureString(text) / 2;
+                position.Y += 180;
+                _spriteBatch.DrawString(_textFont, text, position, Color.White, 0, textMiddlePoint, 1.0f, SpriteEffects.None, 0.5f);
                 break;
             }
         }
 
         // Controls
-        float x = (WIDTH / 4) * 3;
+        float x = (WIDTH / 4) * 3 + 40;
         float y = 90;
-        _spriteBatch.DrawString(_headerFont, "CONTROLS", new Vector2(x, y), Color.Black);
-        _spriteBatch.DrawString(_textFont, "F1 - New 5 x 5 Maze", new Vector2(x, y + 90), Color.Black);
-        _spriteBatch.DrawString(_textFont, "F2 - New 10x10 Maze", new Vector2(x, 230), Color.Black);
-        _spriteBatch.DrawString(_textFont, "F3 - New 15x15 Maze", new Vector2(x, 280), Color.Black);
-        _spriteBatch.DrawString(_textFont, "F4 - New 20x20 Maze", new Vector2(x, 330), Color.Black);
-        _spriteBatch.DrawString(_textFont, "F5 - View High Scores", new Vector2(x, 380), Color.Black);
-        _spriteBatch.DrawString(_textFont, "Arrows - Movement", new Vector2(x, 430), Color.Black);
+        _spriteBatch.DrawString(_headerFont, "CONTROLS", new Vector2(x, y), Color.White);
+        x += 40;
+        y += 50;
+        _spriteBatch.DrawString(_textFont, "F1 - New 5 x 5 Maze", new Vector2(x, y + 40), Color.White);
+        _spriteBatch.DrawString(_textFont, "F2 - New 10x10 Maze", new Vector2(x, y + 100), Color.White);
+        _spriteBatch.DrawString(_textFont, "F3 - New 15x15 Maze", new Vector2(x, y + 160), Color.White);
+        _spriteBatch.DrawString(_textFont, "F4 - New 20x20 Maze", new Vector2(x, y + 220), Color.White);
+        _spriteBatch.DrawString(_textFont, "F5 - View High Scores", new Vector2(x, y + 280), Color.White);
+        _spriteBatch.DrawString(_textFont, "F6 - View Credits", new Vector2(x, y + 340), Color.White);
+        _spriteBatch.DrawString(_textFont, "B - Show Breadcrumbs", new Vector2(x, y + 400), Color.White);
+        _spriteBatch.DrawString(_textFont, "H - Show Hint", new Vector2(x, y + 460), Color.White);
+        _spriteBatch.DrawString(_textFont, "P - Show Solution", new Vector2(x, y + 520), Color.White);
 
         _spriteBatch.End();
 
@@ -148,9 +220,10 @@ public class Model : Game
     private void newGame(int size) {
         _maze = new Maze(
             this,
-            new Vector2(WIDTH / 4, 90),
+            new Vector2(WIDTH / 2 - 450, 80),
             MAZE_DIM,
-            size
+            size,
+            _mazeTexture
         );
         _maze.Initialize();
         _mazeController = new(_keyboardInput, _maze);

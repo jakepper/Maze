@@ -28,7 +28,7 @@ namespace Maze
         private Texture2D _texture;
 
 
-        public Cell(Game game, int x, int y, int h, Vector2 position, int width, Texture2D texture) : base(game, position) {
+        public Cell(Game game, int x, int y, int h, Vector2 position, int width) : base(game, position) {
             X = x;
             Y = y;
             walls = new bool[4];
@@ -36,7 +36,8 @@ namespace Maze
             H = h;
 
             Width = width;
-            _texture = texture;
+            _texture = new(game.GraphicsDevice, 1, 1);
+            _texture.SetData(new[] { Color.White });
         }
 
         public override void Initialize()
@@ -67,9 +68,9 @@ namespace Maze
             if (walls[N]) {
                 spriteBatch.Draw(
                     _texture, 
-                    new Rectangle((int)Position.X, (int)Position.Y, Width, 3), 
+                    new Rectangle((int)Position.X, (int)Position.Y, Width, 4), 
                     null, 
-                    Color.Black, 
+                    Color.BurlyWood,
                     0.0f, 
                     Vector2.Zero, 
                     SpriteEffects.None, 
@@ -79,9 +80,9 @@ namespace Maze
             if (walls[E]) {
                 spriteBatch.Draw(
                     _texture, 
-                    new Rectangle((int)Position.X + Width, (int)Position.Y, Width, 3), 
+                    new Rectangle((int)Position.X + Width, (int)Position.Y, Width, 4), 
                     null, 
-                    Color.Black, 
+                    Color.BurlyWood, 
                     MathHelper.PiOver2, 
                     Vector2.Zero, 
                     SpriteEffects.None, 
@@ -91,9 +92,9 @@ namespace Maze
             if (walls[S]) {
                 spriteBatch.Draw(
                     _texture, 
-                    new Rectangle((int)Position.X, (int)Position.Y + Width, Width, 3), 
+                    new Rectangle((int)Position.X, (int)Position.Y + Width, Width, 4), 
                     null, 
-                    Color.Black, 
+                    Color.BurlyWood, 
                     0.0f,
                     Vector2.Zero, 
                     SpriteEffects.None, 
@@ -103,9 +104,9 @@ namespace Maze
             if (walls[W]) {
                 spriteBatch.Draw(
                     _texture, 
-                    new Rectangle((int)Position.X, (int)Position.Y, Width, 3), 
+                    new Rectangle((int)Position.X, (int)Position.Y, Width, 4), 
                     null, 
-                    Color.Black, 
+                    Color.BurlyWood,
                     MathHelper.PiOver2, 
                     Vector2.Zero, 
                     SpriteEffects.None, 

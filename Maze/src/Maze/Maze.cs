@@ -11,22 +11,23 @@ namespace Maze
 {
     public class Maze : Component, IControls
     {
+        private Texture2D _background;
         private Texture2D _texture;
         private List<Cell> Path;
         private bool showPath;
         private bool showHint;
         private bool showTrail;
-        public int score;
-        public float seconds;
- 
+        private Cell[,] Grid;
+
+        public int Score;
+        public float Seconds;
         public int Width;
         public int CellWidth;
         public int Size;
-        private Cell[,] Grid;
         public Player Player;
         public bool WinConditionMet;
 
-        public Maze(Game game, Vector2 position, int width, int size) : base(game, position)
+        public Maze(Game game, Vector2 position, int width, int size, Texture2D texture) : base(game, position)
         {
             Width = width;
             CellWidth = (int)(width / size);
@@ -35,10 +36,11 @@ namespace Maze
             Grid = new Cell[size, size];
             Path = new();
 
+            _background = texture;
             _texture = new(game.GraphicsDevice, 1, 1);
             _texture.SetData(new[] { Color.White });
 
-            Player = new(game, new Vector2(position.X, position.Y), (int)CellWidth / 2);
+            Player = new(game, new Vector2(position.X, position.Y), CellWidth);
         }
 
         public override void Initialize()
@@ -51,7 +53,7 @@ namespace Maze
                 {
                     cellPos = new Vector2(i * CellWidth, j * CellWidth); // render position
                     distance = (Size - i) + (Size - j) - 2; // heuristic value for pathfinding
-                    Grid[i, j] = new Cell(_game, i, j, distance, Position + cellPos, CellWidth, _texture);
+                    Grid[i, j] = new Cell(_game, i, j, distance, Position + cellPos, CellWidth);
                     Grid[i, j].Initialize();
                 }
             }
@@ -70,8 +72,8 @@ namespace Maze
 
             Player.Initialize();
 
-            seconds = 0f;
-            score = 0;
+            Seconds = 0f;
+            Score = 0;
         }
 
         public void RegisterControls(KeyboardInput keyboardInput)
@@ -79,10 +81,22 @@ namespace Maze
             keyboardInput.RegisterCommand(Keys.B, false, new Input.InputDeviceHelper.CommandDelegate(ToggleTrail));
             keyboardInput.RegisterCommand(Keys.P, false, new Input.InputDeviceHelper.CommandDelegate(TogglePath));
             keyboardInput.RegisterCommand(Keys.H, false, new Input.InputDeviceHelper.CommandDelegate(ToggleHint));
+            
             keyboardInput.RegisterCommand(Keys.Right, true, new Input.InputDeviceHelper.CommandDelegate(MoveRight));
+            keyboardInput.RegisterCommand(Keys.D, true, new Input.InputDeviceHelper.CommandDelegate(MoveRight));
+            keyboardInput.RegisterCommand(Keys.L, true, new Input.InputDeviceHelper.CommandDelegate(MoveRight));
+            
             keyboardInput.RegisterCommand(Keys.Left, true, new Input.InputDeviceHelper.CommandDelegate(MoveLeft));
+            keyboardInput.RegisterCommand(Keys.A, true, new Input.InputDeviceHelper.CommandDelegate(MoveLeft));
+            keyboardInput.RegisterCommand(Keys.J, true, new Input.InputDeviceHelper.CommandDelegate(MoveLeft));
+            
             keyboardInput.RegisterCommand(Keys.Up, true, new Input.InputDeviceHelper.CommandDelegate(MoveUp));
+            keyboardInput.RegisterCommand(Keys.W, true, new Input.InputDeviceHelper.CommandDelegate(MoveUp));
+            keyboardInput.RegisterCommand(Keys.I, true, new Input.InputDeviceHelper.CommandDelegate(MoveUp));
+            
             keyboardInput.RegisterCommand(Keys.Down, true, new Input.InputDeviceHelper.CommandDelegate(MoveDown));
+            keyboardInput.RegisterCommand(Keys.S, true, new Input.InputDeviceHelper.CommandDelegate(MoveDown));
+            keyboardInput.RegisterCommand(Keys.K, true, new Input.InputDeviceHelper.CommandDelegate(MoveDown));
         }
 
         public void UnregisterControls(KeyboardInput keyboardInput) {
@@ -90,14 +104,22 @@ namespace Maze
             keyboardInput.UnregisterCommand(Keys.P);
             keyboardInput.UnregisterCommand(Keys.H);
             keyboardInput.UnregisterCommand(Keys.Right);
+            keyboardInput.UnregisterCommand(Keys.D);
+            keyboardInput.UnregisterCommand(Keys.L);
             keyboardInput.UnregisterCommand(Keys.Left);
+            keyboardInput.UnregisterCommand(Keys.A);
+            keyboardInput.UnregisterCommand(Keys.J);
             keyboardInput.UnregisterCommand(Keys.Up);
+            keyboardInput.UnregisterCommand(Keys.W);
+            keyboardInput.UnregisterCommand(Keys.I);
             keyboardInput.UnregisterCommand(Keys.Down);
+            keyboardInput.UnregisterCommand(Keys.S);
+            keyboardInput.UnregisterCommand(Keys.K);
         }
 
         public override void Update(GameTime gameTime)
         {
-            seconds += (float) gameTime.ElapsedGameTime.TotalSeconds;
+            Seconds += (float) gameTime.ElapsedGameTime.TotalSeconds;
 
             if (Player.Moved) {
                 Player.Moved = false;
@@ -105,10 +127,10 @@ namespace Maze
                 var playerCell = Grid[Player.GridPosition.X, Player.GridPosition.Y];
                 if (!playerCell.WalkedOn) {
                     if (Path.Contains(playerCell)) {
-                        score += 5;
+                        Score += 5;
                     }
                     else {
-                        if (score > 0) score--;
+                        if (Score > 0) Score--;
                     }
                 }
                 FindPath();
@@ -127,7 +149,12 @@ namespace Maze
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(_texture, new Rectangle((int)Position.X, (int)Position.Y, Width, Width), Color.Crimson);
+            // spriteBatch.Draw(_texture, new Rectangle((int)Position.X, (int)Position.Y, Width, Width), Color.Crimson);
+
+            Rectangle destinationRectangle = new Rectangle((int)Position.X, (int)Position.Y, Width, Width);
+            Rectangle sourceRectangle = new Rectangle(0, 0, Width, Width);
+
+            spriteBatch.Draw(_background, destinationRectangle, sourceRectangle, Color.White);
 
             for (int i = 0; i < Size; i++)
             {
@@ -136,7 +163,11 @@ namespace Maze
                     Grid[i, j].Draw(spriteBatch);
                 }
             }
+            int x = (int)Grid[Size - 1, Size - 1].Position.X;
+            int y = (int)Grid[Size - 1, Size - 1].Position.Y + 4;
+            spriteBatch.Draw(_texture, new Rectangle(x, y, CellWidth - 4, CellWidth - 4), Color.Gold);
 
+            int size;
             if (showTrail)
             {
                 for (int i = 0; i < Size; i++)
@@ -145,15 +176,15 @@ namespace Maze
                     {
                         if (Grid[i, j].WalkedOn)
                         {
-                            int x = (int)Grid[i, j].Position.X - 2 + Grid[i, j].Width / 2;
-                            int y = (int)Grid[i, j].Position.Y - 2 + Grid[i, j].Width / 2;
-                            int size = (int)(Width / Size) / 4;
+                            x = (int)Grid[i, j].Position.X - 8 + CellWidth / 2;
+                            y = (int)Grid[i, j].Position.Y - 4 + CellWidth / 2;
+                            size = (int)(Width / Size) / 4;
                             spriteBatch.Draw(
                                 _texture,
                                 new Rectangle(x, y, size, size),
                                 null,
-                                Color.DimGray,
-                                MathHelper.PiOver4,
+                                Color.PaleGreen,
+                                0f,
                                 Vector2.Zero,
                                 SpriteEffects.None,
                                 0.0f
@@ -165,17 +196,16 @@ namespace Maze
 
             if (showPath)
             {
-                int x, y;
-                int size = (int)(Width / Size) / 8;
+                size = (int)(Width / Size) / 4;
                 foreach (var cell in Path)
                 {
-                    x = (int)cell.Position.X - 2 + cell.Width / 2;
-                    y = (int)cell.Position.Y - 2 + cell.Width / 2;
+                    x = (int)cell.Position.X + CellWidth / 2;
+                    y = (int)cell.Position.Y - 4 + CellWidth / 2;
                     spriteBatch.Draw(
                         _texture,
                         new Rectangle(x, y, size, size),
                         null,
-                        Color.WhiteSmoke,
+                        Color.DeepSkyBlue,
                         MathHelper.PiOver4,
                         Vector2.Zero,
                         SpriteEffects.None,
@@ -187,14 +217,14 @@ namespace Maze
             if (showHint && Path.Count > 1)
             {
                 var cell = Path[1];
-                int x = (int)cell.Position.X - 2 + cell.Width / 2;
-                int y = (int)cell.Position.Y - 2 + cell.Width / 2;
-                int size = (int)(Width / Size) / 4;
+                x = (int)cell.Position.X + CellWidth / 2;
+                y = (int)cell.Position.Y - 4 + CellWidth / 2;
+                size = (int)(Width / Size) / 4;
                 spriteBatch.Draw(
                     _texture,
                     new Rectangle(x, y, size, size),
                     null,
-                    Color.WhiteSmoke,
+                    Color.DeepSkyBlue,
                     MathHelper.PiOver4,
                     Vector2.Zero,
                     SpriteEffects.None,

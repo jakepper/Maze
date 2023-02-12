@@ -7,6 +7,7 @@ namespace Maze
     {
         private Texture2D _texture;
         private int Width;
+        private int Size;
         public (int X, int Y) GridPosition;
         public bool Moved;
         public Player(Game game, Vector2 position, int width) : base(game, position)
@@ -14,13 +15,15 @@ namespace Maze
             _texture = new Texture2D(game.GraphicsDevice, 1, 1);
             _texture.SetData(new[] { Color.White });
             Width = width;
+            Size = width / 3;
         }
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            int x = (int)Position.X + (Width / 2);
-            int y = (int)Position.Y + (Width / 2);
-            spriteBatch.Draw(_texture, new Rectangle(x, y, Width, Width), Color.Aquamarine);
+
+            int x = (int)Position.X + (Width / 2) - (Size / 2);
+            int y = (int)Position.Y + (Width / 2) - (Size / 2) + 2;
+            spriteBatch.Draw(_texture, new Rectangle(x, y, Width / 3, Width / 3), Color.Salmon);
         }
 
         public override void Initialize()
